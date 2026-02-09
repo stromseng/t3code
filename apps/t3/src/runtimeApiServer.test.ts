@@ -137,6 +137,23 @@ describe("runtimeApiServer", () => {
     client.socket.close();
   });
 
+  it("trims configured auth token before validating connections", async () => {
+    const server = await startRuntimeApiServer({
+      port: 0,
+      launchCwd: process.cwd(),
+      authToken: "  secret-token  ",
+    });
+    servers.push(server);
+
+    const wsUrl = new URL(server.wsUrl);
+    expect(wsUrl.searchParams.get("token")).toBe("secret-token");
+
+    const client = await connectClient(server.wsUrl);
+    const hello = await client.nextMessage();
+    expect(hello.type).toBe("hello");
+    client.socket.close();
+  });
+
   it("responds to todos.list over websocket RPC", async () => {
     const server = await startRuntimeApiServer({
       port: 0,
