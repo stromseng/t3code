@@ -224,6 +224,17 @@ describe("parseCliOptions", () => {
     expect(options.noOpen).toBe(false);
   });
 
+  it("treats false as disabled T3_NO_OPEN value", () => {
+    const options = parseCliOptions(
+      [],
+      {
+        T3_NO_OPEN: "false",
+      },
+      "/workspace",
+    );
+    expect(options.noOpen).toBe(false);
+  });
+
   it("treats unknown T3_NO_OPEN values as disabled", () => {
     const options = parseCliOptions(
       [],
