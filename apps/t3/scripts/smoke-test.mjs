@@ -253,6 +253,24 @@ async function main() {
     if ((missingAsset.headers.get("x-content-type-options") ?? "").toLowerCase() !== "nosniff") {
       throw new Error("Smoke test failed: expected nosniff on missing asset response.");
     }
+    if ((missingAsset.headers.get("x-frame-options") ?? "").toUpperCase() !== "DENY") {
+      throw new Error("Smoke test failed: expected x-frame-options=DENY on missing asset response.");
+    }
+    if ((missingAsset.headers.get("referrer-policy") ?? "").toLowerCase() !== "no-referrer") {
+      throw new Error("Smoke test failed: expected referrer-policy=no-referrer on missing asset.");
+    }
+    if (
+      (missingAsset.headers.get("cross-origin-resource-policy") ?? "").toLowerCase() !==
+      "same-origin"
+    ) {
+      throw new Error("Smoke test failed: expected CORP header on missing asset response.");
+    }
+    if (
+      (missingAsset.headers.get("cross-origin-opener-policy") ?? "").toLowerCase() !==
+      "same-origin"
+    ) {
+      throw new Error("Smoke test failed: expected COOP header on missing asset response.");
+    }
     if ((missingAsset.headers.get("cache-control") ?? "").toLowerCase() !== "no-store") {
       throw new Error("Smoke test failed: expected cache-control=no-store on missing asset.");
     }
