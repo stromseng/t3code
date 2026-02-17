@@ -3,6 +3,11 @@ type PerfToggleEnv = {
   CI?: string | undefined;
 };
 
+type PerfBenchmarkEnv = {
+  T3CODE_DESKTOP_PERF_BENCHMARK_FOLLOW_UP_PASSES?: string | undefined;
+  CI?: string | undefined;
+};
+
 const TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
 const FALSE_VALUES = new Set(["0", "false", "no", "off"]);
 
@@ -33,4 +38,12 @@ export function shouldRunTerminalPerfInteractions(env: PerfToggleEnv): boolean {
   const toggleOverride = parseBooleanLike(env.T3CODE_DESKTOP_PERF_RUN_TERMINAL);
   if (toggleOverride !== null) return toggleOverride;
   return !isCiEnvironment(env.CI);
+}
+
+export function resolveBenchmarkFollowUpPassCount(env: PerfBenchmarkEnv): number {
+  const raw = env.T3CODE_DESKTOP_PERF_BENCHMARK_FOLLOW_UP_PASSES?.trim();
+  if (raw && /^\d+$/.test(raw)) {
+    return Number.parseInt(raw, 10);
+  }
+  return isCiEnvironment(env.CI) ? 0 : 1;
 }

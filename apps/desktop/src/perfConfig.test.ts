@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { shouldRunTerminalPerfInteractions } from "./perfConfig";
+import { resolveBenchmarkFollowUpPassCount, shouldRunTerminalPerfInteractions } from "./perfConfig";
 
 describe("shouldRunTerminalPerfInteractions", () => {
   it("defaults to enabled outside CI when env is unset", () => {
@@ -128,5 +128,47 @@ describe("shouldRunTerminalPerfInteractions", () => {
         CI: "maybe",
       }),
     ).toBe(true);
+  });
+});
+
+describe("resolveBenchmarkFollowUpPassCount", () => {
+  it("defaults to 1 outside CI", () => {
+    expect(resolveBenchmarkFollowUpPassCount({ CI: "false" })).toBe(1);
+    expect(resolveBenchmarkFollowUpPassCount({ CI: "0" })).toBe(1);
+  });
+
+  it("defaults to 0 in CI", () => {
+    expect(resolveBenchmarkFollowUpPassCount({ CI: "true" })).toBe(0);
+    expect(resolveBenchmarkFollowUpPassCount({ CI: "on" })).toBe(0);
+  });
+
+  it("accepts explicit non-negative integer overrides", () => {
+    expect(
+      resolveBenchmarkFollowUpPassCount({
+        T3CODE_DESKTOP_PERF_BENCHMARK_FOLLOW_UP_PASSES: "2",
+        CI: "true",
+      }),
+    ).toBe(2);
+    expect(
+      resolveBenchmarkFollowUpPassCount({
+        T3CODE_DESKTOP_PERF_BENCHMARK_FOLLOW_UP_PASSES: " 0 ",
+        CI: "false",
+      }),
+    ).toBe(0);
+  });
+
+  it("ignores malformed overrides and falls back to CI default", () => {
+    expect(
+      resolveBenchmarkFollowUpPassCount({
+        T3CODE_DESKTOP_PERF_BENCHMARK_FOLLOW_UP_PASSES: "1abc",
+        CI: "true",
+      }),
+    ).toBe(0);
+    expect(
+      resolveBenchmarkFollowUpPassCount({
+        T3CODE_DESKTOP_PERF_BENCHMARK_FOLLOW_UP_PASSES: "-1",
+        CI: "false",
+      }),
+    ).toBe(1);
   });
 });
