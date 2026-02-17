@@ -129,6 +129,10 @@ function DesktopProjectBootstrap() {
 
   useEffect(() => {
     if (!isElectron || !api || bootstrappedRef.current) return;
+    if (window.localStorage.getItem("t3code:perf-bootstrap-skip") === "1") {
+      bootstrappedRef.current = true;
+      return;
+    }
 
     let disposed = false;
     let retryDelayMs = 500;
