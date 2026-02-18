@@ -299,7 +299,11 @@ const ComposerCommandMenu = memo(function ComposerCommandMenu(props: {
   );
 });
 
-export default function ChatView() {
+interface ChatViewProps {
+  threadId: string;
+}
+
+export default function ChatView({ threadId }: ChatViewProps) {
   const { state, dispatch } = useStore();
   const api = useNativeApi();
   const { resolvedTheme } = useTheme();
@@ -332,7 +336,7 @@ export default function ChatView() {
   const dragDepthRef = useRef(0);
   const terminalOpenByThreadRef = useRef<Record<string, boolean>>({});
 
-  const activeThread = state.threads.find((t) => t.id === state.activeThreadId);
+  const activeThread = state.threads.find((t) => t.id === threadId);
   const activeThreadId = activeThread?.id ?? null;
   const activeSessionId = activeThread?.session?.sessionId;
   const activeProject = state.projects.find((p) => p.id === activeThread?.projectId);
