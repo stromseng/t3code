@@ -37,6 +37,7 @@ import type { ContextMenuItem } from "@t3tools/contracts";
 import { RotatingFileSink } from "@t3tools/shared/logging";
 import { parsePersistedServerObservabilitySettings } from "@t3tools/shared/serverSettings";
 import type { RemoteT3RunnerOptions } from "@t3tools/ssh/tunnel";
+import serverPackageJson from "../../server/package.json" with { type: "json" };
 import { DEFAULT_DESKTOP_BACKEND_PORT, resolveDesktopBackendPort } from "./backendPort.ts";
 import {
   type DesktopSettings,
@@ -696,7 +697,10 @@ const desktopSshEnvironmentBridge = new DesktopSshEnvironmentBridge({
   getMainWindow: () => mainWindow,
   resolveCliRunner: (): RemoteT3RunnerOptions => {
     if (isDevelopment && DEV_REMOTE_T3_SERVER_ENTRY_PATH.length > 0) {
-      return { nodeScriptPath: DEV_REMOTE_T3_SERVER_ENTRY_PATH };
+      return {
+        nodeScriptPath: DEV_REMOTE_T3_SERVER_ENTRY_PATH,
+        nodeEngineRange: serverPackageJson.engines.node,
+      };
     }
     return {
       packageSpec: resolveRemoteT3CliPackageSpec({
@@ -704,6 +708,7 @@ const desktopSshEnvironmentBridge = new DesktopSshEnvironmentBridge({
         updateChannel: desktopSettings.updateChannel,
         isDevelopment,
       }),
+      nodeEngineRange: serverPackageJson.engines.node,
     };
   },
 });
