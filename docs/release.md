@@ -24,7 +24,53 @@ This document covers the unified release workflow for stable and nightly desktop
 - Publishes the CLI package (`apps/server`, npm package `t3`) with OIDC trusted publishing from the same workflow file:
   - stable releases publish npm dist-tag `latest`
   - nightly releases publish npm dist-tag `nightly`
+- Deploys the hosted web app to Vercel only after a release is published:
+  - stable releases are aliased to the `latest` hosted app channel
+  - nightly releases are aliased to the `nightly` hosted app channel
 - Signing is optional and auto-detected per platform from secrets.
+
+## Hosted web app release deployment
+
+The hosted app is intentionally not deployed by Vercel's Git integration. The
+web project disables automatic Git deployments in `apps/web/vercel.json` via
+`git.deploymentEnabled: false`, and `.github/workflows/release.yml` deploys the
+web app with Vercel CLI after the GitHub Release succeeds.
+
+Required GitHub Actions secrets:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+Optional GitHub Actions variables:
+
+- `VERCEL_TEAM_SLUG`: required only if the token needs an explicit Vercel team scope.
+- `T3CODE_WEB_ROUTER_URL`: defaults to `https://app.t3.codes`.
+- `T3CODE_WEB_LATEST_DOMAIN`: defaults to `latest.app.t3.codes`.
+- `T3CODE_WEB_NIGHTLY_DOMAIN`: defaults to `nightly.app.t3.codes`.
+
+Required Vercel domains:
+
+- `app.t3.codes`: the stable router domain users open.
+- `latest.app.t3.codes`: channel alias updated by stable releases.
+- `nightly.app.t3.codes`: channel alias updated by nightly releases.
+
+The router domain runs `apps/web/middleware.ts`. Users opt into a channel by
+visiting `/__t3code/channel?channel=latest` or
+`/__t3code/channel?channel=nightly`; the middleware stores the
+`t3code_web_channel` cookie and rewrites future requests on `app.t3.codes` to
+the matching channel alias.
+
+One-time Vercel dashboard setup:
+
+1. Confirm the web project root directory remains `apps/web`.
+2. Add the three domains above to the web project.
+3. Disable automatic Git deployments in the dashboard if desired; the committed
+   `vercel.json` setting is the source-of-truth, but disconnecting Git in the
+   dashboard is also safe.
+4. Promote or alias one deployment containing `apps/web/middleware.ts` to
+   `app.t3.codes` once. Future release jobs should only update the channel
+   aliases.
 
 ## Nightly builds
 

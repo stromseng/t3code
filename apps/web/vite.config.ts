@@ -10,13 +10,17 @@ const host = process.env.HOST?.trim() || "localhost";
 const configuredHttpUrl = process.env.VITE_HTTP_URL?.trim();
 const configuredWsUrl = process.env.VITE_WS_URL?.trim();
 const configuredHostedAppUrl = (() => {
+  const explicitHostedAppUrl = process.env.VITE_HOSTED_APP_URL?.trim();
+  if (explicitHostedAppUrl) {
+    return explicitHostedAppUrl;
+  }
   if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
     return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   }
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  return process.env.VITE_HOSTED_APP_URL?.trim();
+  return undefined;
 })();
 const sourcemapEnv = process.env.T3CODE_WEB_SOURCEMAP?.trim().toLowerCase();
 
