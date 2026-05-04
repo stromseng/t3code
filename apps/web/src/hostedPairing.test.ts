@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  buildHostedChannelSelectionUrl,
   buildHostedPairingUrl,
   hasHostedPairingRequest,
   isHostedStaticApp,
@@ -40,6 +41,22 @@ describe("hostedPairing", () => {
     expect(url.searchParams.get("label")).toBe("Workstation");
     expect(url.searchParams.has("token")).toBe(false);
     expect(url.hash).toBe("#token=pairing-token");
+  });
+
+  it("builds hosted channel selection URLs through the configured router origin", () => {
+    vi.stubEnv("VITE_HOSTED_APP_URL", "https://app.t3.codes");
+
+    const url = new URL(
+      buildHostedChannelSelectionUrl({
+        channel: "nightly",
+        currentUrl: new URL("https://latest.app.t3.codes/settings?tab=about#version"),
+      }),
+    );
+
+    expect(url.origin).toBe("https://app.t3.codes");
+    expect(url.pathname).toBe("/__t3code/channel");
+    expect(url.searchParams.get("channel")).toBe("nightly");
+    expect(url.searchParams.get("next")).toBe("/settings?tab=about#version");
   });
 
   it("ignores incomplete hosted pairing requests", () => {

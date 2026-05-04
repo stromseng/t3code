@@ -64,7 +64,9 @@ the matching channel alias.
 The release deploy job rewrites release package versions before upload so the
 hosted app's About panel renders the release version. It also passes
 `VITE_HOSTED_APP_CHANNEL=latest|nightly`, which renders the hosted update track
-in the About panel.
+selector in the About panel. Changing the selector navigates through
+`/__t3code/channel` on the router domain so the user's channel cookie is updated
+before returning to the current app path.
 
 One-time Vercel dashboard setup:
 
