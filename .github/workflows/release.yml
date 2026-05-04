@@ -536,6 +536,20 @@ jobs:
         with:
           bun-version-file: package.json
 
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+
+      - name: Install release tooling dependencies
+        run: bun install --frozen-lockfile --filter=@t3tools/scripts --filter=@t3tools/web
+
+      - name: Align package versions to release version
+        run: node scripts/update-release-package-versions.ts "${{ needs.preflight.outputs.version }}"
+
+      - name: Refresh release lockfile
+        run: bun install --lockfile-only --ignore-scripts
+
       - name: Deploy and alias channel
         shell: bash
         run: |
@@ -571,7 +585,9 @@ jobs:
               --yes \
               --token "$VERCEL_TOKEN" \
               "${vercel_scope_args[@]}" \
-              --build-env "VITE_HOSTED_APP_URL=$router_url"
+              --build-env "APP_VERSION=${{ needs.preflight.outputs.version }}" \
+              --build-env "VITE_HOSTED_APP_URL=$router_url" \
+              --build-env "VITE_HOSTED_APP_CHANNEL=$channel_name"
           )"
 
           echo "Aliasing $deployment_url to $channel_domain."

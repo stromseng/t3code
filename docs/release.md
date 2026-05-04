@@ -61,6 +61,11 @@ visiting `/__t3code/channel?channel=latest` or
 `t3code_web_channel` cookie and rewrites future requests on `app.t3.codes` to
 the matching channel alias.
 
+The release deploy job rewrites release package versions before upload so the
+hosted app's About panel renders the release version. It also passes
+`VITE_HOSTED_APP_CHANNEL=latest|nightly`, which renders the hosted update track
+in the About panel.
+
 One-time Vercel dashboard setup:
 
 1. Confirm the web project root directory remains `apps/web`.
