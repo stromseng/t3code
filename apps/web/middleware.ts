@@ -55,13 +55,33 @@ export function parseCookieValue(cookieHeader: string | null, name: string): str
   return null;
 }
 
+function normalizeHost(value: string | null): string | null {
+  const host = value?.split(":")[0]?.trim().toLowerCase();
+  return host ? host : null;
+}
+
 export function isRouterHost(hostHeader: string | null, routerHost: string): boolean {
-  const host = hostHeader?.split(":")[0]?.trim().toLowerCase();
-  return host === routerHost.trim().toLowerCase();
+  const host = normalizeHost(hostHeader);
+  const router = normalizeHost(routerHost);
+  return host !== null && host === router;
+}
+
+function hasControlCharacter(value: string): boolean {
+  for (const char of value) {
+    const code = char.charCodeAt(0);
+    if (code <= 0x1f || code === 0x7f) return true;
+  }
+  return false;
 }
 
 function safeNextPath(value: string | null): string {
-  if (!value?.startsWith("/") || value.startsWith("//")) {
+  if (
+    !value?.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("\\") ||
+    value.includes(":") ||
+    hasControlCharacter(value)
+  ) {
     return "/";
   }
 

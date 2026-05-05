@@ -23,6 +23,7 @@ describe("hosted web channel middleware", () => {
 
   it("matches the configured router host without a port", () => {
     expect(isRouterHost("app.t3.codes:443", "app.t3.codes")).toBe(true);
+    expect(isRouterHost("app.t3.codes", "app.t3.codes:443")).toBe(true);
     expect(isRouterHost("latest.app.t3.codes", "app.t3.codes")).toBe(false);
   });
 
@@ -53,6 +54,30 @@ describe("hosted web channel middleware", () => {
 
     expect(
       selectChannel(request("/__t3code/channel?channel=latest&next=https://evil.example")),
+    ).toEqual({
+      channel: "latest",
+      setCookie: true,
+      nextPath: "/",
+    });
+
+    expect(selectChannel(request("/__t3code/channel?channel=latest&next=/\\evil.example"))).toEqual(
+      {
+        channel: "latest",
+        setCookie: true,
+        nextPath: "/",
+      },
+    );
+
+    expect(
+      selectChannel(request("/__t3code/channel?channel=latest&next=/settings%3Adebug")),
+    ).toEqual({
+      channel: "latest",
+      setCookie: true,
+      nextPath: "/",
+    });
+
+    expect(
+      selectChannel(request("/__t3code/channel?channel=latest&next=/settings%0Adebug")),
     ).toEqual({
       channel: "latest",
       setCookie: true,

@@ -13,7 +13,7 @@ import { scopeThreadRef } from "@t3tools/client-runtime";
 import { DEFAULT_UNIFIED_SETTINGS } from "@t3tools/contracts/settings";
 import { createModelSelection } from "@t3tools/shared/model";
 import { Equal } from "effect";
-import { APP_VERSION, HOSTED_APP_CHANNEL } from "../../branding";
+import { APP_VERSION, HOSTED_APP_CHANNEL, HOSTED_APP_CHANNEL_LABEL } from "../../branding";
 import {
   canCheckForUpdate,
   getDesktopUpdateButtonTooltip,
@@ -356,9 +356,7 @@ function AboutVersionSection() {
               }}
             >
               <SelectTrigger className="w-full sm:w-40" aria-label="Update track">
-                <SelectValue>
-                  {selectedHostedAppChannel === "nightly" ? "Nightly" : "Latest"}
-                </SelectValue>
+                <SelectValue>{HOSTED_APP_CHANNEL_LABEL}</SelectValue>
               </SelectTrigger>
               <SelectPopup align="end" alignItemWithTrigger={false}>
                 <SelectItem hideIndicator value="latest">
