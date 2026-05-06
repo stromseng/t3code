@@ -3,6 +3,7 @@ import { parsePersistedServerObservabilitySettings } from "@t3tools/shared/serve
 import {
   AuthSessionId,
   CommandId,
+  DesktopBackendBootstrap,
   OrchestrationReadModel,
   ProjectId,
   type ClientOrchestrationCommand,
@@ -67,22 +68,6 @@ import { WorkspacePaths } from "./workspace/Services/WorkspacePaths.ts";
 import { WorkspacePathsLive } from "./workspace/Layers/WorkspacePaths.ts";
 
 const PortSchema = Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 65535 }));
-
-const BootstrapEnvelopeSchema = Schema.Struct({
-  mode: Schema.optional(RuntimeMode),
-  port: Schema.optional(PortSchema),
-  host: Schema.optional(Schema.String),
-  t3Home: Schema.optional(Schema.String),
-  devUrl: Schema.optional(Schema.URLFromString),
-  noBrowser: Schema.optional(Schema.Boolean),
-  desktopBootstrapToken: Schema.optional(Schema.String),
-  autoBootstrapProjectFromCwd: Schema.optional(Schema.Boolean),
-  logWebSocketEvents: Schema.optional(Schema.Boolean),
-  tailscaleServeEnabled: Schema.optional(Schema.Boolean),
-  tailscaleServePort: Schema.optional(PortSchema),
-  otlpTracesUrl: Schema.optional(Schema.String),
-  otlpMetricsUrl: Schema.optional(Schema.String),
-});
 
 const modeFlag = Flag.choice("mode", RuntimeMode.literals).pipe(
   Flag.withDescription("Runtime mode. `desktop` keeps loopback defaults unless overridden."),
@@ -262,7 +247,7 @@ export const resolveServerConfig = (
     const bootstrapFd = Option.getOrUndefined(normalizedFlags.bootstrapFd) ?? env.bootstrapFd;
     const bootstrapEnvelope =
       bootstrapFd !== undefined
-        ? yield* readBootstrapEnvelope(BootstrapEnvelopeSchema, bootstrapFd)
+        ? yield* readBootstrapEnvelope(DesktopBackendBootstrap, bootstrapFd)
         : Option.none();
     const bootstrap = Option.getOrUndefined(bootstrapEnvelope);
 
@@ -292,11 +277,7 @@ export const resolveServerConfig = (
       },
     );
     const devUrl = Option.getOrElse(
-      resolveOptionPrecedence(
-        normalizedFlags.devUrl,
-        Option.fromUndefinedOr(env.devUrl),
-        Option.fromUndefinedOr(bootstrap?.devUrl),
-      ),
+      resolveOptionPrecedence(normalizedFlags.devUrl, Option.fromUndefinedOr(env.devUrl)),
       () => undefined,
     );
     const baseDir = yield* resolveBaseDir(
@@ -336,7 +317,6 @@ export const resolveServerConfig = (
         isHeadlessStartup ? Option.some(false) : Option.none(),
         normalizedFlags.autoBootstrapProjectFromCwd,
         Option.fromUndefinedOr(env.autoBootstrapProjectFromCwd),
-        Option.fromUndefinedOr(bootstrap?.autoBootstrapProjectFromCwd),
       ),
       () => mode === "web",
     );
@@ -344,7 +324,6 @@ export const resolveServerConfig = (
       resolveOptionPrecedence(
         normalizedFlags.logWebSocketEvents,
         Option.fromUndefinedOr(env.logWebSocketEvents),
-        Option.fromUndefinedOr(bootstrap?.logWebSocketEvents),
       ),
       () => Boolean(devUrl),
     );
