@@ -3,7 +3,6 @@ import * as Cause from "effect/Cause";
 import * as Data from "effect/Data";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 import { HttpClient } from "effect/unstable/http";
@@ -45,7 +44,7 @@ export class BackendTimeoutError extends Data.TaggedError("BackendTimeoutError")
 export const waitForHttpReadyEffect = Effect.fn("waitForHttpReadyEffect")(function* (
   baseUrl: URL,
   options?: WaitForHttpReadyEffectOptions,
-): Effect.fn.Return<void, Error, HttpClient.HttpClient> {
+): Effect.fn.Return<void, BackendTimeoutError, HttpClient.HttpClient> {
   const timeout = options?.timeout ?? DEFAULT_TIMEOUT;
   const interval = options?.interval ?? DEFAULT_INTERVAL;
   const requestTimeout = options?.requestTimeout ?? DEFAULT_REQUEST_TIMEOUT;
@@ -60,16 +59,8 @@ export const waitForHttpReadyEffect = Effect.fn("waitForHttpReadyEffect")(functi
 
   yield* client.get(requestUrl).pipe(
     Effect.asVoid,
-    Effect.timeoutOption(timeout),
-    Effect.flatMap(
-      Option.match({
-        onNone: () => Effect.fail(new BackendTimeoutError({ url: baseUrl })),
-        onSome: () => Effect.void,
-      }),
-    ),
-    Effect.catchTags({
-      HttpClientError: () => Effect.fail(new BackendTimeoutError({ url: baseUrl })),
-    }),
+    Effect.timeout(timeout),
+    Effect.mapError(() => new BackendTimeoutError({ url: baseUrl })),
   );
 });
 
