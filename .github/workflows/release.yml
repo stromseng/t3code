@@ -358,6 +358,7 @@ jobs:
         with:
           path: release-artifacts/desktop-${{ matrix.platform }}-${{ matrix.arch }}
           key: release-assets-${{ github.run_id }}-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_attempt }}
+          enableCrossOsArchive: true
 
   publish_cli:
     name: Publish CLI to npm
@@ -440,6 +441,7 @@ jobs:
           restore-keys: |
             release-assets-${{ github.run_id }}-mac-arm64-
           fail-on-cache-miss: true
+          enableCrossOsArchive: true
 
       - name: Restore macOS x64 desktop assets
         uses: actions/cache/restore@v5
@@ -449,6 +451,7 @@ jobs:
           restore-keys: |
             release-assets-${{ github.run_id }}-mac-x64-
           fail-on-cache-miss: true
+          enableCrossOsArchive: true
 
       - name: Restore Linux x64 desktop assets
         uses: actions/cache/restore@v5
@@ -458,6 +461,7 @@ jobs:
           restore-keys: |
             release-assets-${{ github.run_id }}-linux-x64-
           fail-on-cache-miss: true
+          enableCrossOsArchive: true
 
       - name: Restore Windows x64 desktop assets
         uses: actions/cache/restore@v5
@@ -467,6 +471,7 @@ jobs:
           restore-keys: |
             release-assets-${{ github.run_id }}-win-x64-
           fail-on-cache-miss: true
+          enableCrossOsArchive: true
 
       - name: Stage desktop assets
         shell: bash
