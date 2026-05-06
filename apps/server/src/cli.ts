@@ -5,6 +5,7 @@ import {
   CommandId,
   DesktopBackendBootstrap,
   OrchestrationReadModel,
+  PortSchema,
   ProjectId,
   type ClientOrchestrationCommand,
 } from "@t3tools/contracts";
@@ -66,8 +67,6 @@ import {
 } from "./serverRuntimeState.ts";
 import { WorkspacePaths } from "./workspace/Services/WorkspacePaths.ts";
 import { WorkspacePathsLive } from "./workspace/Layers/WorkspacePaths.ts";
-
-const PortSchema = Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 65535 }));
 
 const modeFlag = Flag.choice("mode", RuntimeMode.literals).pipe(
   Flag.withDescription("Runtime mode. `desktop` keeps loopback defaults unless overridden."),

@@ -1496,6 +1496,12 @@ function startBackend(): void {
             `bootstrap backend readiness warning message=${formatErrorMessage(error)}`,
           );
           console.warn("[desktop] backend readiness check failed during bootstrap", error);
+
+          if (isDevelopment) return;
+          const existingWindow = mainWindow ?? BrowserWindow.getAllWindows()[0] ?? null;
+          if (existingWindow !== null) return;
+          mainWindow = createWindow();
+          writeDesktopLogHeader("bootstrap main window created (readiness timeout fallback)");
         }),
       onOutput: (streamName, chunk) =>
         Effect.sync(() => {
