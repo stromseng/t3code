@@ -3,6 +3,7 @@ import * as Cause from "effect/Cause";
 import * as Data from "effect/Data";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 import { HttpClient } from "effect/unstable/http";
@@ -60,9 +61,13 @@ export const waitForHttpReadyEffect = Effect.fn("waitForHttpReadyEffect")(functi
   yield* client.get(requestUrl).pipe(
     Effect.asVoid,
     Effect.timeoutOption(timeout),
+    Effect.flatMap(
+      Option.match({
+        onNone: () => Effect.fail(new BackendTimeoutError({ url: baseUrl })),
+        onSome: () => Effect.void,
+      }),
+    ),
     Effect.catchTags({
-      TimeoutError: () => Effect.fail(new BackendTimeoutError({ url: baseUrl })),
-      // Maybe map this to different error kind?
       HttpClientError: () => Effect.fail(new BackendTimeoutError({ url: baseUrl })),
     }),
   );
