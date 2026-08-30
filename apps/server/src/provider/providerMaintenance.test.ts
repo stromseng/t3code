@@ -59,6 +59,18 @@ const scopedPackageToolUpdate = makePackageManagedProviderMaintenanceResolver({
     isCommandPath: isNativeTestCommandPath("/.scoped-package-tool/bin/scoped-package-tool"),
   },
 });
+const claudeUpdate = makePackageManagedProviderMaintenanceResolver({
+  provider: driver("claudeAgent"),
+  npmPackageName: "@anthropic-ai/claude-code",
+  homebrewFormula: "claude-code",
+  homebrewFormulaAlternatives: ["claude-code@latest"],
+  nativeUpdate: {
+    executable: "claude",
+    args: ["update"],
+    lockKey: "claude-native",
+    isCommandPath: isNativeTestCommandPath("/.local/bin/claude"),
+  },
+});
 const staticToolUpdate = makeStaticProviderMaintenanceResolver(
   makeProviderMaintenanceCapabilities({
     provider: driver("staticTool"),
@@ -452,6 +464,50 @@ it.layer(NodeServices.layer)("providerMaintenance", (it) => {
     });
   });
 
+  it("uses the installed Claude Code Homebrew cask in the update command", () => {
+    expect(
+      claudeUpdate.resolve({
+        binaryPath: "/opt/homebrew/bin/claude",
+        resolvedCommandPath: "/opt/homebrew/bin/claude",
+        realCommandPath: "/opt/homebrew/Caskroom/claude-code@latest/2.1.220/claude",
+      }),
+    ).toEqual({
+      provider: driver("claudeAgent"),
+      packageName: "@anthropic-ai/claude-code",
+      update: {
+        command: "brew upgrade claude-code@latest",
+
+        executable: "brew",
+
+        args: ["upgrade", "claude-code@latest"],
+
+        lockKey: "homebrew",
+      },
+    });
+  });
+
+  it("keeps the stable Claude Code Homebrew cask in the update command", () => {
+    expect(
+      claudeUpdate.resolve({
+        binaryPath: "/opt/homebrew/bin/claude",
+        resolvedCommandPath: "/opt/homebrew/bin/claude",
+        realCommandPath: "/opt/homebrew/Caskroom/claude-code/2.1.219/claude",
+      }),
+    ).toEqual({
+      provider: driver("claudeAgent"),
+      packageName: "@anthropic-ai/claude-code",
+      update: {
+        command: "brew upgrade claude-code",
+
+        executable: "brew",
+
+        args: ["upgrade", "claude-code"],
+
+        lockKey: "homebrew",
+      },
+    });
+  });
+
   it.effect("keeps npm updates for binaries symlinked into npm's global node_modules tree", () =>
     Effect.gen(function* () {
       const tempDir = yield* makeTempDir("t3-npm-capabilities");
@@ -549,18 +605,6 @@ it.layer(NodeServices.layer)("providerMaintenance", (it) => {
   );
 
   it("allows the package's own install scripts in npm global updates", () => {
-    const claudeUpdate = makePackageManagedProviderMaintenanceResolver({
-      provider: driver("claudeAgent"),
-      npmPackageName: "@anthropic-ai/claude-code",
-      homebrewFormula: "claude-code",
-      nativeUpdate: {
-        executable: "claude",
-        args: ["update"],
-        lockKey: "claude-native",
-        isCommandPath: isNativeTestCommandPath("/.local/bin/claude"),
-      },
-    });
-
     expect(claudeUpdate.resolve()).toEqual({
       provider: driver("claudeAgent"),
       packageName: "@anthropic-ai/claude-code",

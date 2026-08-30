@@ -67,6 +67,7 @@ export interface PackageManagedProviderMaintenanceDefinition {
   readonly provider: ProviderDriverKind;
   readonly npmPackageName: string;
   readonly homebrewFormula: string | null;
+  readonly homebrewFormulaAlternatives?: ReadonlyArray<string>;
   readonly nativeUpdate: {
     readonly executable: string;
     readonly args: ReadonlyArray<string>;
@@ -190,8 +191,9 @@ function makeVitePlusGlobalProviderMaintenanceCapabilities(
 
 function makeHomebrewProviderMaintenanceCapabilities(
   definition: PackageManagedProviderMaintenanceDefinition,
+  formula = definition.homebrewFormula,
 ): ProviderMaintenanceCapabilities {
-  if (!definition.homebrewFormula) {
+  if (!formula) {
     return makeManualOnlyProviderMaintenanceCapabilities({
       provider: definition.provider,
       packageName: definition.npmPackageName,
@@ -202,9 +204,30 @@ function makeHomebrewProviderMaintenanceCapabilities(
     provider: definition.provider,
     packageName: definition.npmPackageName,
     updateExecutable: "brew",
-    updateArgs: ["upgrade", definition.homebrewFormula],
+    updateArgs: ["upgrade", formula],
     updateLockKey: "homebrew",
   });
+}
+
+function resolveHomebrewFormula(
+  definition: PackageManagedProviderMaintenanceDefinition,
+  commandPaths: ReadonlyArray<string>,
+): string | null {
+  const formulas = [
+    ...(definition.homebrewFormulaAlternatives ?? []),
+    ...(definition.homebrewFormula ? [definition.homebrewFormula] : []),
+  ];
+  return (
+    formulas.find((formula) => {
+      const caskName = formula.split("/").at(-1)?.toLowerCase();
+      return (
+        caskName !== undefined &&
+        commandPaths.some((commandPath) =>
+          normalizeCommandPath(commandPath).includes(`/caskroom/${caskName}/`),
+        )
+      );
+    }) ?? definition.homebrewFormula
+  );
 }
 
 function makeNativeProviderMaintenanceCapabilities(
@@ -314,7 +337,10 @@ export function resolvePackageManagedProviderMaintenance(
       return makeNpmGlobalProviderMaintenanceCapabilities(definition);
     }
     if (commandPaths.some(isHomebrewCommandPath)) {
-      return makeHomebrewProviderMaintenanceCapabilities(definition);
+      return makeHomebrewProviderMaintenanceCapabilities(
+        definition,
+        resolveHomebrewFormula(definition, commandPaths),
+      );
     }
   }
 
